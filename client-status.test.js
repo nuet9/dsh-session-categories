@@ -3,6 +3,20 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { readFileSync } from 'node:fs';
 const source=readFileSync(new URL('./client.js',import.meta.url),'utf8');
+test('add workspace uses composed directory flow and handles adoption failures',async()=>{
+  assert.doesNotMatch(source,/ctx\.uiWorkspace\.pickDirectory\(/);
+  assert.ok(!source.includes("children:{'sidebar.workspaces.directoryFlow'"));
+  assert.ok(source.includes('void adoptWorkspace(directoryPath.trim())'));
+  const body=source.match(/async function adoptWorkspace\(path\)\{([\s\S]*?)\n          \}/)[1];
+  const calls=[],addingRef={current:false};let failure=false;
+  const ctx={workspaces:{create:async input=>{if(failure)throw new Error('create failed');calls.push(input.path);}}};
+  const errors=[],opened=[];
+  const run=vm.runInNewContext('(async(path)=>{'+body+'})',{ctx,addingRef,setAddingWorkspace:()=>{},setWorkspaceError:value=>errors.push(value),setDirectoryOpen:value=>opened.push(value)});
+  await run('/example');assert.deepEqual(calls,['/example']);assert.equal(addingRef.current,false);assert.equal(opened.at(-1),false);
+  await run(null);assert.equal(calls.length,1);
+  failure=true;await run('/failed');assert.equal(errors.at(-1),'create failed');assert.equal(addingRef.current,false);
+  addingRef.current=true;await run('/duplicate');assert.equal(calls.length,1);
+});
 test('automatic order uses immutable creation time, independent of activity and membership order',()=>{
   const expression=source.match(/const chronological=(.*);/)[1];
   const order=(sessionIds,created)=>Array.from(vm.runInNewContext(expression,{workspace:{sessionIds},created}));
