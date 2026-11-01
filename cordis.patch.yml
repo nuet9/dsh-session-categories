@@ -1,0 +1,4 @@
+- insert:
+    - id: local-session-categories
+      name: '@local/session-categories'
+      config: {}
