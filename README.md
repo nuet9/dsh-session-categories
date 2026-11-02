@@ -50,3 +50,7 @@ node --test --test-isolation=none model.test.js client-status.test.js
 ## 安装与回退
 
 Download the release tarball from https://github.com/nuet9/dsh-session-categories/releases and install it with the Harness plugin manager. Package identity remains `@local/session-categories` for compatibility. Tested with Harness 0.2.1-rc.5; other versions are unverified. Disable the bundle to restore the original sidebar; stored categories are retained.
+
+## v1.0.1
+
+修复外部客户端（包括 DeepPilot）新建会话时创建时间尚未同步导致暂时沉底的问题，并消除列表刷新请求竞争。保留手动排序；手机实际创建流程尚待验收。

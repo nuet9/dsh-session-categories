@@ -19,12 +19,16 @@ test('add workspace uses composed directory flow and handles adoption failures',
 });
 test('automatic order uses immutable creation time, independent of activity and membership order',()=>{
   const expression=source.match(/const chronological=(.*);/)[1];
-  const order=(sessionIds,created)=>Array.from(vm.runInNewContext(expression,{workspace:{sessionIds},created}));
+  const rank=source.match(/const creationRank=(.*);/)[1];
+  const order=(sessionIds,created,known=sessionIds)=>Array.from(vm.runInNewContext('const creationRank='+rank+';'+expression,{workspace:{sessionIds},created,data:{sessionIds:known}}));
   const created={old:100,middle:200,new:300};
   assert.deepEqual(order(['old','new','middle'],created),['new','middle','old']);
   assert.deepEqual(order(['middle','old','new'],created),['new','middle','old']);
   assert.deepEqual(order(['old','new','middle','newest'],{...created,newest:400}),['newest','new','middle','old']);
   assert.deepEqual(order(['b','a'],{}),['a','b']);
+  assert.deepEqual(order(['old','remote'],{old:100},['old']),['remote','old']);
+  assert.deepEqual(order(['old','remote'],{old:100,remote:200}),['remote','old']);
+  assert.ok(!source.includes('if(pending.current||mutating.current)return;'));
   assert.doesNotMatch(expression,/updatedAt|lastPrompt|reverse/);
 });
 function fixture(){

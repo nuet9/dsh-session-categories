@@ -1,50 +1,50 @@
-﻿{
-    "name":  "@local/session-categories",
-    "version":  "1.0.0",
-    "private":  false,
-    "type":  "module",
-    "description":  "Persistent conversation categories within each Harness workspace",
-    "exports":  {
-                    ".":  "./index.js",
-                    "./client":  "./client.js",
-                    "./locale/*.json":  "./locale/*.json",
-                    "./icon":  "./icon.svg"
-                },
-    "files":  [
-                  "index.js",
-                  "model.js",
-                  "client.js",
-                  "cordis.patch.yml",
-                  "locale/*.json",
-                  "icon.svg",
-                  "README.md"
-              ],
-    "peerDependencies":  {
-                             "zod":  "4.4.3"
-                         },
-    "scripts":  {
-                    "test":  "node --test --test-isolation=none model.test.js client-status.test.js"
-                },
-    "dsh":  {
-                "bundle":  {
-                               "patch":  "./cordis.patch.yml"
-                           },
-                "client":  {
-                               "platform":  "web",
-                               "immediately":  true,
-                               "inject":  [
-                                              "@deepseek-ai/dsh-client-ui-workspace",
-                                              "@deepseek-ai/dsh-client-ui-session",
-                                              "@deepseek-ai/dsh-client-ui-sidebar",
-                                              "@deepseek-ai/dsh-client-connection",
-                                              "@deepseek-ai/dsh-client-locale",
-                                              "@deepseek-ai/dsh-api-workspace-controller"
-                                          ]
-                           }
-            },
-    "repository":  {
-                       "type":  "git",
-                       "url":  "https://github.com/nuet9/dsh-session-categories.git"
-                   },
-    "author":  "nuet9"
+{
+  "name": "@local/session-categories",
+  "version": "1.0.1",
+  "private": false,
+  "type": "module",
+  "description": "Persistent conversation categories within each Harness workspace",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "model.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "zod": "4.4.3"
+  },
+  "scripts": {
+    "test": "node --test --test-isolation=none model.test.js client-status.test.js"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-workspace",
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-api-workspace-controller"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nuet9/dsh-session-categories.git"
+  },
+  "author": "nuet9"
 }

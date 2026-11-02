@@ -77,7 +77,7 @@ window.__ModuleLoader__.load({
           function toggleUnclassified(){setUnclassifiedFolded(value=>{const next=!value;try{const saved=JSON.parse(localStorage.getItem(unclassifiedFoldKey)||'{}');saved[wid]=next;localStorage.setItem(unclassifiedFoldKey,JSON.stringify(saved));}catch{}return next;});}
           const alive=React.useRef(true),sequence=React.useRef(0),pending=React.useRef(false),mutating=React.useRef(false);
           const refresh=React.useCallback(async(signal)=>{
-            if(pending.current||mutating.current)return;
+            if(mutating.current)return;
             pending.current=true;const n=++sequence.current;
             try{const value=await rpc({action:'list',workspaceId:wid},signal);if(alive.current&&n===sequence.current){setData(value);setError('');}}
             catch(e){if(alive.current&&!signal?.aborted&&n===sequence.current)setError(String(e.message||e));}
@@ -95,7 +95,8 @@ window.__ModuleLoader__.load({
           function fold(){setFolded(v=>{const next=!v;try{const all=JSON.parse(localStorage.getItem(foldKey)||'{}');all[wid]=next;localStorage.setItem(foldKey,JSON.stringify(all));}catch{}return next;});}
           const categories=data?.categories||[], assignments=data?.assignments||{};
           const created=data?.createdAtBySession||{};
-          const chronological=[...workspace.sessionIds].sort((a,b)=>(created[b]||0)-(created[a]||0)||a.localeCompare(b));
+          const creationRank=id=>Number.isFinite(created[id])?created[id]:(data?.sessionIds.includes(id)?0:Number.MAX_SAFE_INTEGER);
+          const chronological=[...workspace.sessionIds].sort((a,b)=>creationRank(b)-creationRank(a)||a.localeCompare(b));
           const ids=[...new Set([...chronological.filter(id=>!data?.sessionOrder?.includes(id)),...(data?.sessionOrder||[])])].filter(id=>workspace.sessionIds.includes(id)&&(showArchived||!archived.has(id)));
           const filtered=ids.filter(id=>(summary[id]?.displayTitle||id).toLocaleLowerCase().includes(query));
           const save=name=>change(editor.kind==='delete'?{action:'delete',categoryId:editor.id}:{action:editor.kind==='create'?'create':'rename',...(editor.id?{categoryId:editor.id}:{}),name});
