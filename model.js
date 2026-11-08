@@ -39,7 +39,8 @@ export function validateInput(input) {
 }
 export function validRecord(value) {
   if (value?.sessionOrder !== undefined && (!Array.isArray(value.sessionOrder) || value.sessionOrder.some(id => !identifier(id)) || new Set(value.sessionOrder).size !== value.sessionOrder.length)) return false;
-  if (!object(value) || Object.keys(value).some(key => !['categories', 'assignments', 'sessionOrder'].includes(key)) || !Array.isArray(value.categories) || value.categories.length > 200 || !object(value.assignments)) return false;
+  if (value?.manualGroupOrders !== undefined && (!object(value.manualGroupOrders) || Object.values(value.manualGroupOrders).some(order => !Array.isArray(order) || order.some(id => !identifier(id)) || new Set(order).size !== order.length))) return false;
+  if (!object(value) || Object.keys(value).some(key => !['categories', 'assignments', 'sessionOrder', 'manualGroupOrders'].includes(key)) || !Array.isArray(value.categories) || value.categories.length > 200 || !object(value.assignments)) return false;
   const ids = new Set(), names = new Set();
   for (const category of value.categories) {
     if (!object(category) || Object.keys(category).length !== 3 || !identifier(category.id) || typeof category.collapsed !== 'boolean') return false;
@@ -107,11 +108,20 @@ export class SessionCategories {
     }
     if (input.action === 'move' && input.beforeSessionId !== undefined && input.beforeSessionId !== null && !identifier(input.beforeSessionId)) fail('INVALID_INPUT', 'beforeSessionId must be a session ID or null.');
     if (input.action === 'move' && input.beforeSessionId !== undefined && input.beforeSessionId !== input.sessionId) {
-      const targetIds = (state.sessionOrder || sessionIds).filter(id => members.has(id) && (state.assignments[id] || null) === input.categoryId && id !== input.sessionId);
+      const targetIds = sessionIds.filter(id => members.has(id) && (state.assignments[id] || null) === input.categoryId && id !== input.sessionId);
       if (input.beforeSessionId !== null && !targetIds.includes(input.beforeSessionId)) fail('INVALID_INPUT', 'Drop target must belong to the destination category.');
-      const base = [...new Set([...(state.sessionOrder || []), ...sessionIds])].filter(id => members.has(id) && id !== input.sessionId);
+      // Save only the destination group's explicit layout. Other groups stay automatic.
+      const key = input.categoryId || 'unclassified';
+      const orders = state.manualGroupOrders || {};
+      const prior = orders[key] || [];
+      const destination = sessionIds.filter(id => (state.assignments[id] || null) === input.categoryId && id !== input.sessionId);
+      const base = [...new Set([...destination.filter(id => !prior.includes(id)).reverse(), ...prior])].filter(id => destination.includes(id));
       const index = input.beforeSessionId === null ? base.length : base.indexOf(input.beforeSessionId);
-      base.splice(index, 0, input.sessionId); state.sessionOrder = base;
+      base.splice(index, 0, input.sessionId);
+      state.manualGroupOrders = { ...orders, [key]: base };
+      // Retain the legacy field for older readers; current UI uses group orders.
+      if (!state.sessionOrder) state.sessionOrder = [];
+
     }
     if (input.action !== 'list') await this.table.put(input.workspaceId, state);
     return structuredClone({ workspaceId: input.workspaceId, ...state, sessionIds, ...(categoryId ? { categoryId } : {}) });

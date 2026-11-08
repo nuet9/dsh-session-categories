@@ -61,11 +61,11 @@ test('reject malformed actions and stored records before persistence', async () 
 test('drop insertion order persists and invalid destination rows are rejected', async () => {
   const f=fixture();
   await run(f,'move',{sessionId:'s2',categoryId:null,beforeSessionId:'s1'});
-  assert.deepEqual((await run(f,'list')).sessionOrder,['s2','s1']);
+  assert.deepEqual((await run(f,'list')).manualGroupOrders.unclassified,['s2','s1']);
   await run(f,'move',{sessionId:'s2',categoryId:null,beforeSessionId:null});
-  assert.deepEqual((await run(f,'list')).sessionOrder,['s1','s2']);
+  assert.deepEqual((await run(f,'list')).manualGroupOrders.unclassified,['s1','s2']);
   await assert.rejects(run(f,'move',{sessionId:'s1',categoryId:null,beforeSessionId:'s3'}),{code:'INVALID_INPUT'});
-  assert.deepEqual((await run(f,'list')).sessionOrder,['s1','s2']);
+  assert.deepEqual((await run(f,'list')).manualGroupOrders.unclassified,['s1','s2']);
 });
 test('domain declaration supplies the persisted record validator and closes after draining', async () => {
   let validator;
@@ -77,4 +77,15 @@ test('domain declaration supplies the persisted record validator and closes afte
   await f.service.close(); await pending;
   await assert.rejects(run(f, 'list'), { code: 'CLOSED' });
   assert.equal(f.records.get('w1').categories.length, 1);
+});
+
+test('dragging another category never captures new unclassified members', async()=>{
+ const f=fixture();const {categoryId}=await run(f,'create',{name:'Work'});
+ await run(f,'move',{sessionId:'s1',categoryId,beforeSessionId:null});
+ f.workspaces.get('w1').sessionIds.push('newest');
+ await run(f,'move',{sessionId:'s1',categoryId,beforeSessionId:null});
+ const state=await run(f,'list');
+ assert.equal(state.manualGroupOrders.unclassified,undefined);
+ assert.deepEqual(state.manualGroupOrders[categoryId],['s1']);
+ assert.ok(!state.sessionOrder.includes('newest'));
 });

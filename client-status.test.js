@@ -104,3 +104,13 @@ test('native animation timing and reduced motion are retained in scoped CSS',()=
   assert.match(source,/sc-state-dash 1\.5s ease-in-out infinite/);
   assert.match(source,/@media\(prefers-reduced-motion:reduce\)/);
 });
+
+test('legacy global order does not suppress chronological unclassified sessions',()=>{
+ const expression=source.match(/const key=category\?\.id\|\|'', (.*), collapsed=/)?.[1];
+ assert.ok(source.includes("saved=data?.manualGroupOrders?.[key||'unclassified']||(category?data?.sessionOrder:[])||[]"));
+ assert.ok(source.includes('const ids=chronological.filter'));
+ const choose=(category,data)=>data.manualGroupOrders?.[category?.id||'unclassified']||(category?data.sessionOrder:[])||[];
+ assert.deepEqual(choose(null,{sessionOrder:['old','newest']}),[]);
+ assert.deepEqual(choose({id:'c'},{sessionOrder:['old']}),['old']);
+ assert.deepEqual(choose(null,{manualGroupOrders:{unclassified:['two','one']}}),['two','one']);
+});

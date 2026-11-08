@@ -58,6 +58,7 @@ export async function apply(ctx) {
             categories: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['id', 'name', 'collapsed'], properties: { id: { type: 'string' }, name: { type: 'string' }, collapsed: { type: 'boolean' } } } },
             assignments: { type: 'object', additionalProperties: true },
             sessionOrder: { type: 'array', items: { type: 'string' } },
+            manualGroupOrders: { type: 'object', additionalProperties: true },
             sessionIds: { type: 'array', items: { type: 'string' } },
           },
         },
